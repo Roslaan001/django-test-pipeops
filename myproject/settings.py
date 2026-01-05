@@ -10,6 +10,11 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*').split(',')
 
+# CSRF trusted origins for PipeOps
+CSRF_TRUSTED_ORIGINS = [
+    'https://test.pipeops.app',
+]
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
