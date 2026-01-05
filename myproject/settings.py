@@ -95,7 +95,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files - IMPORTANT FOR PIPEOPS
 MEDIA_URL = '/media/'
-MEDIA_ROOT = '/media'  # For PipeOps with persistent storage
+MEDIA_ROOT = '/app/media'  # For PipeOps with persistent storage
 
 # For local development, use:
 # MEDIA_ROOT = BASE_DIR / 'media'
