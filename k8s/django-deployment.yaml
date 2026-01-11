@@ -1,0 +1,95 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: django-gallery
+  namespace: django-gallery
+  labels:
+    app: django-gallery
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: django-gallery
+  template:
+    metadata:
+      labels:
+        app: django-gallery
+    spec:
+      initContainers:
+        - name: migrate
+          image: django-gallery:latest
+          imagePullPolicy: Never
+          command: ["python", "manage.py", "migrate", "--noinput"]
+          envFrom:
+            - configMapRef:
+                name: django-config
+          env:
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: django-secrets
+                  key: SECRET_KEY
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: django-secrets
+                  key: DB_PASSWORD
+      containers:
+        - name: django
+          image: django-gallery:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: django-config
+          env:
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: django-secrets
+                  key: SECRET_KEY
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: django-secrets
+                  key: DB_PASSWORD
+          volumeMounts:
+            - name: media-storage
+              mountPath: /app/media
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+      volumes:
+        - name: media-storage
+          persistentVolumeClaim:
+            claimName: django-media-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: django-service
+  namespace: django-gallery
+spec:
+  selector:
+    app: django-gallery
+  ports:
+    - port: 80
+      targetPort: 8000
+  type: NodePort
